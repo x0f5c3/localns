@@ -15,6 +15,7 @@ use crate::dns::{RData, Record, RecordSet};
 use crate::util::Address;
 use crate::{backoff::Backoff, config::Config};
 
+use super::LoopResult;
 use super::SourceContext;
 
 #[derive(Debug, PartialEq, Eq, Deserialize, Clone)]

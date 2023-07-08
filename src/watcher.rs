@@ -8,7 +8,8 @@ use std::{
 };
 
 use futures::Stream;
-use notify::{watcher, DebouncedEvent, RecommendedWatcher, RecursiveMode, Watcher};
+use notify::{recommended_watcher, Event, EventKind, RecommendedWatcher, RecursiveMode, Watcher};
+use notify_debouncer_full::{new_debouncer, DebouncedEvent};
 use pin_project_lite::pin_project;
 use tokio::sync::mpsc as tokio_mpsc;
 
@@ -39,8 +40,12 @@ pub fn watch(path: &Path) -> Result<FileEventStream, String> {
     let (std_sender, std_receiver) = std_mpsc::channel();
     let (tk_sender, tk_receiver) = tokio_mpsc::channel(10);
 
-    let mut watcher = watcher(std_sender, Duration::from_millis(500))
-        .map_err(|e| format!("Unable to watch file {}: {}", path.display(), e))?;
+    let mut watcher = new_debouncer(
+        Duration::from_secs(30),
+        Some(Duration::from_millis(500)),
+        std_sender,
+    )
+    .map_err(|e| format!("Unable to watch file {}: {}", path.display(), e))?;
 
     let watch_path = match path.parent() {
         Some(parent) => parent,
@@ -48,28 +53,29 @@ pub fn watch(path: &Path) -> Result<FileEventStream, String> {
     };
 
     watcher
+        .watcher()
         .watch(watch_path, RecursiveMode::Recursive)
         .map_err(|e| format!("Unable to watch file {}: {}", path.display(), e))?;
 
     let target = path.to_owned();
     thread::spawn(move || loop {
         for ev in std_receiver.iter() {
-            let event = match ev {
-                DebouncedEvent::NoticeWrite(ev_path) => {
+            let event = match ev.map(|c| c) {
+                Ok(EventKind::Modify(ModifyKind::ev_path)) => {
                     if target == ev_path {
                         FileEvent::Change
                     } else {
                         continue;
                     }
                 }
-                DebouncedEvent::NoticeRemove(ev_path) => {
+                Event::NoticeRemove(ev_path) => {
                     if target == ev_path {
                         FileEvent::Delete
                     } else {
                         continue;
                     }
                 }
-                DebouncedEvent::Create(ev_path) => {
+                Event::Create(ev_path) => {
                     if target == ev_path {
                         FileEvent::Create
                     } else {

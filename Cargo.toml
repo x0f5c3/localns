@@ -8,21 +8,38 @@ repository = "https://github.com/Mossop/localns"
 homepage = "https://github.com/Mossop/localns"
 license = "MIT"
 edition = "2021"
-default-run = "localns"
+#default-run = "localns"
 
 [dependencies]
 bollard = { version = "^0.14.0", features = ["ssl"] }
 log = "^0.4.17"
-flexi_logger = { version = "^0.23.3", features = ["colors"] }
+flexi_logger = { version = "0.25.5", features = ["colors"] }
 tokio = { version = "1.20.4", features = ["full"] }
 serde = "^1.0.159"
-serde_yaml = "^0.8.26"
+serde_yaml = "0.9.22"
 futures = "^0.3.28"
 pin-project-lite = "^0.2.8"
 reqwest = { version = "^0.11.16", default-features = false, features = ["json", "rustls-tls"] }
-notify = "^4.0.17"
+notify = "6.0.1"
+notify-debouncer-full = "0.2.0"
 trust-dns-server = "^0.22.0"
 async-trait = "^0.1.68"
 uuid = { version = "^1.3.1", features = ["v4"] }
 time = "^0.3.20"
 actix-web = "^4.3.0"
+
+
+[dependencies.tracing]
+version = "0.1.37"
+
+
+[dependencies.tracing-subscriber]
+version = "0.3.17"
+features = ["env-filter", "local-time", "parking_lot"]
+
+[dependencies.tracing-actix-web]
+version = "0.7.5"
+
+[dependencies.twelf]
+version = "0.12.0"
+features = ["toml", "yaml", "custom_fn", "default_trait"]

@@ -11,6 +11,7 @@ use uuid::Uuid;
 
 use crate::{config::Config, dns::RecordSet};
 
+pub mod caddy;
 pub mod dhcp;
 pub mod docker;
 pub mod file;
@@ -33,6 +34,8 @@ pub struct SourceConfig {
 
     #[serde(default)]
     pub remote: HashMap<String, remote::RemoteConfig>,
+    #[serde(default)]
+    pub caddy: HashMap<String, caddy::CaddyConfig>,
 }
 
 #[derive(Clone, Hash)]
@@ -95,6 +98,11 @@ impl RecordSourcesState {
 struct RecordSource {
     records: RecordSet,
     aborters: Vec<AbortHandle>,
+}
+
+pub(crate) enum LoopResult {
+    Backoff,
+    Retry,
 }
 
 struct SourceContext {
